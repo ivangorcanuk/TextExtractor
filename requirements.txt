@@ -1,0 +1,7 @@
+packaging   25.0
+pdf2image   1.17.0
+pillow      11.2.1
+pip         21.3.1
+pytesseract 0.3.13
+setuptools  60.2.0
+wheel       0.37.1
