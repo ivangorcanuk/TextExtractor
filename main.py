@@ -3,77 +3,77 @@ from pdf2image import convert_from_path
 import logging
 import os
 
-# Настройка логгирования
+# Configuring logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def extract_text_from_pdf(pdf_path, output_file="extracted_text.txt", languages="osd+eng", poppler_path=None):
     """
-    Извлекает текст из PDF с использованием OCR с обработкой ошибок
+    Extracts text from PDF using OCR with error handling
 
-    :param pdf_path: Путь к PDF файлу
-    :param output_file: Файл для сохранения результата
-    :param languages: Языки для OCR (формат Tesseract)
-    :param poppler_path: Путь к Poppler (для Windows)
-    :return: True если успешно, False если были ошибки
+    pdf_path: The path to the PDF file
+    output_file: File to save the result
+    languages: Languages for OCR (Tesseract format)
+    poppler_path: The path to Poppler
+    return: True if successful, False if there were errors
     """
     success = True
 
     try:
-        # Проверка существования файла
+        # Checking the existence of a file
         if not os.path.exists(pdf_path):
-            raise FileNotFoundError(f"PDF файл не найден: {pdf_path}")
+            raise FileNotFoundError(f"The PDF file was not found: {pdf_path}")
 
-        # Проверка поддержки языков в Tesseract
+        # Checking language support in Tesseract
         try:
             supported_langs = pytesseract.get_languages()
             for lang in languages.split('+'):
                 if lang not in supported_langs:
-                    raise ValueError(f"Язык '{lang}' не поддерживается Tesseract. Доступные языки: {supported_langs}")
+                    raise ValueError(f"The language '{lang}' is not supported by Tesseract. Available languages: {supported_langs}")
         except Exception as e:
-            logger.error(f"Ошибка проверки языков: {e}")
+            logger.error(f"Language verification error: {e}")
             raise
 
-        # Конвертация PDF в изображения
+        # Converting PDF to Images
         try:
-            logger.info(f"Конвертация PDF в изображения...")
+            logger.info(f"Convert PDF to images...")
             images = convert_from_path(
                 pdf_path,
                 dpi=300,
                 poppler_path=poppler_path,
-                strict=False  # Более мягкая обработка поврежденных PDF
+                strict=False  # Softer handling of corrupted PDFs
             )
             if not images:
-                raise ValueError("Не удалось получить изображения из PDF (файл может быть поврежден или пуст)")
+                raise ValueError("Couldn't get images from PDF (file may be corrupted or empty)")
         except Exception as e:
-            logger.error(f"Ошибка конвертации PDF: {e}")
+            logger.error(f"PDF conversion error: {e}")
             raise
 
-        # Обработка каждой страницы
+        # Processing of each page
         all_text = []
         for i, image in enumerate(images):
             try:
-                logger.info(f"Обработка страницы {i + 1}...")
+                logger.info(f"Page processing {i + 1}...")
                 text = pytesseract.image_to_string(image, lang=languages)
                 all_text.append(text)
-                logger.debug(f"Страница {i + 1}:\n{text}\n{'-' * 50}")
+                logger.debug(f"Page {i + 1}:\n{text}\n{'-' * 50}")
             except pytesseract.TesseractError as e:
-                logger.error(f"Ошибка OCR на странице {i + 1}: {e}")
-                all_text.append(f"\n[ОШИБКА OCR НА СТРАНИЦЕ {i + 1}]\n")
+                logger.error(f"OCR error on the page {i + 1}: {e}")
+                all_text.append(f"\n[OCR ERROR ON THE PAGE {i + 1}]\n")
                 success = False
             except Exception as e:
-                logger.error(f"Неожиданная ошибка на странице {i + 1}: {e}")
-                all_text.append(f"\n[НЕИЗВЕСТНАЯ ОШИБКА НА СТРАНИЦЕ {i + 1}]\n")
+                logger.error(f"Unexpected error on the page {i + 1}: {e}")
+                all_text.append(f"\n[UNKNOWN ERROR ON THE PAGE {i + 1}]\n")
                 success = False
 
-        # Сохранение результата
+        # Saving the result
         try:
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write("\n".join(all_text))
-            logger.info(f"Результат сохранен в {output_file}")
+            logger.info(f"The result is saved in {output_file}")
         except Exception as e:
-            logger.error(f"Ошибка сохранения результата: {e}")
+            logger.error(f"Error saving the result: {e}")
             raise
 
     except FileNotFoundError as e:
@@ -83,7 +83,7 @@ def extract_text_from_pdf(pdf_path, output_file="extracted_text.txt", languages=
         logger.error(e)
         success = False
     except Exception as e:
-        logger.error(f"Критическая ошибка: {e}")
+        logger.error(f"Critical error: {e}")
         success = False
 
     return success
@@ -100,6 +100,6 @@ if __name__ == "__main__":
     )
 
     if result:
-        print("Обработка завершена успешно!")
+        print("Processing completed successfully!")
     else:
-        print("Обработка завершена с ошибками. Проверьте лог для деталей.")
+        print("The processing was completed with errors. Check the log for details.")
